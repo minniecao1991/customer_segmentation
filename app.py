@@ -15,7 +15,7 @@ from pyspark.sql.functions import col
 from scipy.cluster.hierarchy import dendrogram, linkage, fcluster
 import scipy.cluster.hierarchy as sch 
 
-st.title("Data Science")
+st.title("Project_1")
 st.write("## Customers Segmentation")
 
 products_df = pd.read_csv('Products_with_Categories.csv')
