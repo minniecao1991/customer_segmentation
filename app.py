@@ -4,7 +4,6 @@ import pandas as pd
 import numpy as np
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
 import matplotlib.pyplot as plt
 from sklearn import metrics
 import seaborn as sns
@@ -13,11 +12,8 @@ import plotly.express as px
 from sklearn.preprocessing import RobustScaler 
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col
-from pyspark.ml.feature import VectorAssembler, StandardScaler
 from scipy.cluster.hierarchy import dendrogram, linkage, fcluster
 import scipy.cluster.hierarchy as sch 
-from scipy.cluster.hierarchy import fcluster
-from sklearn.preprocessing import StandardScaler
 
 st.title("Data Science")
 st.write("## Customers Segmentation")
@@ -386,6 +382,7 @@ elif choice == 'Kmeans_RFM':
     st.pyplot(fig)
 
 elif choice == "Kmeans_RFM_bigdata":
+    from pyspark.ml.feature import VectorAssembler, StandardScaler
     from pyspark.ml.clustering import KMeans
     rfm_df= pd.read_csv('rfm_df.csv')
     spark = SparkSession.builder.appName("RFM Analysis with K-Means").getOrCreate()
@@ -454,6 +451,7 @@ elif choice == "Kmeans_RFM_bigdata":
     st.pyplot(fig)
 
 elif choice == "Hireachical_clustering":
+    from sklearn.preprocessing import StandardScaler
     rfm_df= pd.read_csv('rfm_df.csv')
     rfm_data = rfm_df[['Recency', 'Frequency', 'Monetary']]
     scaler = StandardScaler()
