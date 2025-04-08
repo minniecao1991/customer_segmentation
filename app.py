@@ -81,7 +81,9 @@ menu = ["Overview", "Build Project", "Manual RFM","Kmeans_RFM","Kmeans_RFM_bigda
 choice = st.sidebar.selectbox('Menu', menu)
 if choice == 'Overview':    
     st.subheader("Overview")
-    st.write("""
+    st.write("1. Giới thiệu Project1")
+    st.write("2. Kết quả đạt được")
+    st.write("3. Người dùng")
     #### ...
     """)  
 
