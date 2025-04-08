@@ -7,3 +7,4 @@ scikit-learn
 squarify
 scipy
 plotly
+pyspark
