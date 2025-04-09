@@ -18,6 +18,7 @@ import pickle
 import joblib
 from sklearn.preprocessing import FunctionTransformer
 from sklearn.pipeline import Pipeline
+import io
 
 st.title("## Customers Segmentation")
 
@@ -509,7 +510,7 @@ elif choice=='Tra cứu nhóm khách hàng':
     }
     # Chọn nhập mã khách hàng hoặc nhập thông tin khách hàng vào dataframe
     st.write("##### 1. Chọn cách nhập thông tin khách hàng")
-    type = st.radio("Chọn cách nhập thông tin khách hàng", options=["Nhập mã khách hàng", "Nhập thông tin khách hàng vào dataframe"])
+    type = st.radio("Chọn cách nhập thông tin khách hàng", options=["Nhập mã khách hàng", "Nhập thông tin khách hàng vào dataframe","Tải file Excel/CSV"])
     if type == "Nhập mã khách hàng":
         # Nếu người dùng chọn nhập mã khách hàng
         st.subheader("Nhập mã khách hàng")
@@ -533,7 +534,7 @@ elif choice=='Tra cứu nhóm khách hàng':
                     st.write("Không tìm thấy khách hàng với mã này.")
             except ValueError:
                 st.write("Vui lòng nhập mã khách hàng hợp lệ (số nguyên).")
-    else:
+    elif type == "Nhập thông tin khách hàng vào dataframe":
         # Nếu người dùng chọn nhập thông tin khách hàng vào dataframe có 3 cột là Recency, Frequency, Monetary
         st.write("##### 2. Thông tin khách hàng")
         # Tạo điều khiển table để người dùng nhập thông tin khách hàng trực tiếp trên table
@@ -562,3 +563,60 @@ elif choice=='Tra cứu nhóm khách hàng':
         st.write(df_customer)
         # Từ kết quả phân cụm khách hàng, người dùng có thể xem thông tin chi tiết của từng cụm khách hàng, xem biểu đồ, thống kê...
         # hoặc thực hiện các xử lý khác
+    elif type == "Tải file Excel/CSV":
+        # Nếu người dùng chọn tải file Excel/CSV
+        st.subheader("Tải file Excel hoặc CSV")
+        # Tạo file mẫu để tải về
+        sample_df = pd.DataFrame(columns=['Member_number', 'Recency', 'Frequency', 'Monetary'])
+        # Chuyển DataFrame thành CSV buffer
+        csv_buffer = io.StringIO()
+        sample_df.to_csv(csv_buffer, index=False)
+        csv_data = csv_buffer.getvalue()
+        # Chuyển DataFrame thành Excel buffer
+        excel_buffer = io.BytesIO()
+        sample_df.to_excel(excel_buffer, index=False)
+        excel_data = excel_buffer.getvalue()
+        # Thêm nút tải file mẫu (CSV và Excel)
+        st.write("Tải file mẫu để điền dữ liệu:")
+        col1, col2 = st.columns(2)
+        with col1:
+            st.download_button(
+                label="Tải file CSV mẫu",
+                data=csv_data,
+                file_name="customer_data_template.csv",
+                mime="text/csv"
+            )
+        with col2:
+            st.download_button(
+                label="Tải file Excel mẫu",
+                data=excel_data,
+                file_name="customer_data_template.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )   
+        # Upload file
+        uploaded_file = st.file_uploader("Chọn file Excel hoặc CSV", type=["csv", "xlsx"])
+        if uploaded_file is not None:
+            try:
+                # Đọc file dựa trên định dạng
+                if uploaded_file.name.endswith('.csv'):
+                    df_uploaded = pd.read_csv(uploaded_file)
+                elif uploaded_file.name.endswith('.xlsx'):
+                    df_uploaded = pd.read_excel(uploaded_file)
+                # Hiển thị dữ liệu ban đầu
+                st.write("##### 2. Dữ liệu từ file tải lên")
+                st.write(df_uploaded)
+                # Kiểm tra các cột cần thiết
+                required_columns = ['Recency', 'Frequency', 'Monetary']
+                if all(col in df_uploaded.columns for col in required_columns):
+                    # Dự đoán cụm
+                    clusters = pipeline.predict(df_uploaded[required_columns])
+                    df_uploaded['Kmeans_RFM'] = [cluster_to_group[cluster] for cluster in clusters]
+                    # Hiển thị kết quả phân cụm
+                    st.write("##### 3. Kết quả phân cụm khách hàng")
+                    st.write(df_uploaded)
+                else:
+                    st.error("File tải lên cần có các cột: Recency, Frequency, Monetary")
+            except Exception as e:
+                st.error(f"Đã xảy ra lỗi khi xử lý file: {str(e)}")
+        else:
+            st.info("Vui lòng tải lên một file Excel hoặc CSV để bắt đầu.")
