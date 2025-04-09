@@ -20,7 +20,6 @@ from sklearn.preprocessing import FunctionTransformer
 from sklearn.pipeline import Pipeline
 
 st.title("## Customers Segmentation")
-st.write("Overview")
 
 products_df = pd.read_csv('Products_with_Categories.csv')
 transactions_df = pd.read_csv('Transactions.csv')
