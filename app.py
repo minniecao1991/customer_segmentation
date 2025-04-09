@@ -14,9 +14,13 @@ from pyspark.sql import SparkSession
 from pyspark.sql.functions import col
 from scipy.cluster.hierarchy import dendrogram, linkage, fcluster
 import scipy.cluster.hierarchy as sch 
+import pickle
+import joblib
+from sklearn.preprocessing import FunctionTransformer
+from sklearn.pipeline import Pipeline
 
-st.title("Project_1")
-st.write("## Customers Segmentation")
+st.title("## Customers Segmentation")
+st.write("Overview")
 
 products_df = pd.read_csv('Products_with_Categories.csv')
 transactions_df = pd.read_csv('Transactions.csv')
@@ -77,14 +81,13 @@ rfm_df['RFM_Level'] = rfm_df.apply(rfm_level, axis=1)
 output_file = 'rfm_df.csv'
 rfm_df.to_csv(output_file, index=True, encoding='utf-8')
 
-menu = ["Overview", "Build Project", "Manual RFM","Kmeans_RFM","Kmeans_RFM_bigdata","Hireachical_clustering"]
+menu = ["Overview", "Build Project", "Manual RFM","Kmeans_RFM","Kmeans_RFM_bigdata","Hireachical_clustering","Tra cứu nhóm khách hàng"]
 choice = st.sidebar.selectbox('Menu', menu)
 if choice == 'Overview':    
     st.subheader("Overview")
-    st.write("1. Giới thiệu Project1")
-    st.write("2. Kết quả đạt được")
-    st.write("3. Người dùng")
+    st.write("""
     #### ...
+    """)  
 
 elif choice == 'Build Project':
     st.subheader("Build Project")
@@ -496,3 +499,65 @@ elif choice == "Hireachical_clustering":
     plt.axis("off")  # Ẩn trục
     # Hiển thị biểu đồ trong Streamlit
     st.pyplot(fig)
+
+elif choice=='Tra cứu nhóm khách hàng':
+    pipeline = joblib.load('customer_segmentation_pipeline.pkl')
+    cluster_to_group = {
+        0: 'Loyal Customers', #Mua gần đây, tần suất ổn định, chi tiêu khá cao.
+        1: 'At-Risk Customers', #Lâu không mua, tần suất thấp, chi tiêu không nổi bật.
+        2: 'VIP', #Mua thường xuyên, chi tiêu cao, dù không phải gần đây nhất.
+        3: 'Lost Customers' #Lâu không mua, hiếm khi mua, chi tiêu rất thấp.
+    }
+    # Chọn nhập mã khách hàng hoặc nhập thông tin khách hàng vào dataframe
+    st.write("##### 1. Chọn cách nhập thông tin khách hàng")
+    type = st.radio("Chọn cách nhập thông tin khách hàng", options=["Nhập mã khách hàng", "Nhập thông tin khách hàng vào dataframe"])
+    if type == "Nhập mã khách hàng":
+        # Nếu người dùng chọn nhập mã khách hàng
+        st.subheader("Nhập mã khách hàng")
+        # Tạo điều khiển để người dùng nhập mã khách hàng
+        customer_id = st.text_input("Nhập mã khách hàng")
+        # Nếu người dùng nhập mã khách hàng, thực hiện các xử lý tiếp theo
+        # Đề xuất khách hàng thuộc cụm nào
+        # In kết quả ra màn hình
+        st.write("Mã khách hàng:", customer_id)
+        if customer_id:  # Kiểm tra nếu có mã khách hàng
+            try:
+                customer_data = rfm_df[rfm_df['Member_number'] == int(customer_id)][['Recency', 'Frequency', 'Monetary']]
+                if not customer_data.empty:
+                    st.write("Thông tin RFM:", customer_data)
+                    cluster = pipeline.predict(customer_data)
+                    group_name = cluster_to_group[cluster[0]]
+                    st.write(f"Khách hàng thuộc cụm: {group_name}")
+                else:
+                    st.write("Không tìm thấy khách hàng với mã này.")
+            except ValueError:
+                st.write("Vui lòng nhập mã khách hàng hợp lệ (số nguyên).")
+    else:
+        # Nếu người dùng chọn nhập thông tin khách hàng vào dataframe có 3 cột là Recency, Frequency, Monetary
+        st.write("##### 2. Thông tin khách hàng")
+        # Tạo điều khiển table để người dùng nhập thông tin khách hàng trực tiếp trên table
+        st.write("Nhập thông tin khách hàng")
+        # Tạo dataframe để người dùng nhập thông tin khách hàng
+        # Tạo danh sách tạm để lưu thông tin khách hàng
+        customer_data = []
+        for i in range(5):
+            st.write(f"Khách hàng {i+1}")
+            recency = st.slider("Recency (ngày)", 1, 365, 100, key=f"recency_{i}")
+            frequency = st.slider("Frequency (đơn hàng)", 1, 50, 5, key=f"frequency_{i}")
+            monetary = st.slider("Monetary ($)", 1, 1000, 100, key=f"monetary_{i}")
+            customer_data.append({"Recency": recency, "Frequency": frequency, "Monetary": monetary})
+
+        # Chuyển danh sách thành DataFrame
+        df_customer = pd.DataFrame(customer_data)          
+        # Thực hiện phân cụm khách hàng dựa trên giá trị của 3 cột này
+        if not df_customer.empty:
+            st.write("Phân cụm khách hàng...")
+            # Dự đoán cụm bằng pipeline
+            clusters = pipeline.predict(df_customer)
+            # Thêm cột 'Kmeans_RFM' vào DataFrame
+            df_customer['Kmeans_RFM'] = [cluster_to_group[cluster] for cluster in clusters]
+        # In kết quả ra màn hình
+        st.write("##### 3. Phân cụm khách hàng")
+        st.write(df_customer)
+        # Từ kết quả phân cụm khách hàng, người dùng có thể xem thông tin chi tiết của từng cụm khách hàng, xem biểu đồ, thống kê...
+        # hoặc thực hiện các xử lý khác
