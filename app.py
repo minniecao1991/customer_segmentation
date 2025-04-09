@@ -522,12 +522,14 @@ elif choice=='Tra cứu nhóm khách hàng':
         st.write("Mã khách hàng:", customer_id)
         if customer_id:  # Kiểm tra nếu có mã khách hàng
             try:
-                customer_data = rfm_df[rfm_df['Member_number'] == int(customer_id)][['Recency', 'Frequency', 'Monetary']]
+                customer_data = rfm_df[rfm_df['Member_number'] == int(customer_id)][['Recency', 'Frequency', 'Monetary','RFM_Level']]
                 if not customer_data.empty:
                     st.write("Thông tin RFM:", customer_data)
-                    cluster = pipeline.predict(customer_data)
+                    cluster = pipeline.predict(customer_data[['Recency', 'Frequency', 'Monetary']])
                     group_name = cluster_to_group[cluster[0]]
                     st.write(f"Khách hàng thuộc cụm: {group_name}")
+                    rfm_level = customer_data['RFM_Level'].iloc[0]
+                    st.write(f"Khách hàng thuộc cụm theo tập luận RFM: {rfm_level}")
                 else:
                     st.write("Không tìm thấy khách hàng với mã này.")
             except ValueError:
