@@ -9,3 +9,4 @@ scipy
 plotly
 pyspark
 setuptools
+openpyxl
