@@ -19,6 +19,7 @@ import joblib
 from sklearn.preprocessing import FunctionTransformer
 from sklearn.pipeline import Pipeline
 import io
+from sklearn.metrics import silhouette_score
 
 st.title("Customers Segmentation")
 
@@ -314,13 +315,31 @@ elif choice == 'Kmeans_RFM':
         rfm_df[['Log_Recency', 'Log_Frequency', 'Log_Monetary']])
     # Elbow Method để chọn k
     X = rfm_df[['Scaled_Log_Recency', 'Scaled_Log_Frequency', 'Scaled_Log_Monetary']]
-    # Danh sách chứa SSE cho mỗi giá trị k
-    sse = {}
-    # Chạy KMeans cho các giá trị k từ 1 đến 10
-    for k in range(1, 11):
-        kmeans = KMeans(n_clusters=k, random_state=42)
-        kmeans.fit(X)
-        sse[k] = kmeans.inertia_  
+
+    range_n_clusters = range(2, 11)
+
+    # Tính toán Silhouette Score và SSE
+    silhouette_avg_list = []
+    sse_list = []
+
+    for n_clusters in range_n_clusters:
+        kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)
+        cluster_labels = kmeans.fit_predict(X)
+        
+        # Silhouette Score
+        silhouette_avg = silhouette_score(X, cluster_labels)
+        silhouette_avg_list.append(silhouette_avg)
+        
+        # SSE
+        sse = kmeans.inertia_
+        sse_list.append(sse)
+
+    # Tính SSE%
+    sse_percent_drop = [0]  # Phần trăm giảm đầu tiên = 0
+    for i in range(1, len(sse_list)):
+        drop = ((sse_list[i-1] - sse_list[i]) / sse_list[i-1]) * 100
+        sse_percent_drop.append(drop)
+        
     # Lấy các cột đã chuẩn hóa từ rfm_df
     df_now_scaled = rfm_df[['Scaled_Log_Recency', 'Scaled_Log_Frequency', 'Scaled_Log_Monetary']]
     # Thực hiện phân cụm với k = 4
@@ -346,13 +365,28 @@ elif choice == 'Kmeans_RFM':
 
     st.table(rfm_df.head())
 
-    # Tạo biểu đồ
-    fig, ax = plt.subplots(figsize=(10, 6))  # Tạo figure và axes với kích thước 10x6
-    ax.plot(list(sse.keys()), list(sse.values()), marker='o')  # Vẽ đường với điểm đánh dấu
-    # Tùy chỉnh biểu đồ
-    ax.set_xlabel('Số cụm (k)')
-    ax.set_ylabel('SSE (Sum of Squared Errors)')
-    ax.set_title('Elbow Method để chọn k')
+    # Vẽ biểu đồ
+    fig, axes = plt.subplots(1, 2, figsize=(14, 6))
+
+    # Biểu đồ Silhouette
+    axes[0].plot(range_n_clusters, silhouette_avg_list, 'o-', color='blue')
+    axes[0].set_title('Silhouette Score vs K')
+    axes[0].set_xlabel('Số cụm (K)')
+    axes[0].set_ylabel('Silhouette Score')
+    axes[0].grid(True)
+    axes[0].set_xticks(list(range_n_clusters))
+
+    # Biểu đồ SSE%
+    axes[1].plot(range_n_clusters, sse_percent_drop, 'o-', color='green')
+    axes[1].set_title('Tỷ lệ giảm SSE theo K (SSE%)')
+    axes[1].set_xlabel('Số cụm (K)')
+    axes[1].set_ylabel('Giảm SSE so với K trước (%)')
+    axes[1].grid(True)
+    axes[1].set_xticks(list(range_n_clusters))
+
+    plt.suptitle('Đánh giá số lượng cụm tối ưu (K) theo Silhouette & SSE%', fontsize=14)
+    plt.tight_layout(rect=[0, 0, 1, 0.95])
+
     # Hiển thị biểu đồ trong Streamlit
     st.pyplot(fig)
 
