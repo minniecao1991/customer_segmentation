@@ -84,21 +84,39 @@ rfm_df.to_csv(output_file, index=True, encoding='utf-8')
 
 menu = ["Giới thiệu tổng quan", "EDA","Tra cứu nhóm khách hàng"]
 choice = st.sidebar.selectbox('Menu', menu)
+
+# Thiết lập thông tin trong sidebar
+st.sidebar.title("Thông tin dự án")
+st.sidebar.markdown("""
+👨‍🏫 **Giảng viên**: Cô Khuất Thùy Phương  
+🏆 **Thực hiện bởi**:  
+Cao Thị Ngọc Minh & Nguyễn Kế Nhựt  
+📅 **Ngày báo cáo**: 12/04/2025  
+""")
+
 if choice == 'Giới thiệu tổng quan':    
-    st.subheader("Giới thiệu project")
-    st.write("""
-    Dự án này được thiết kế nhằm hỗ trợ **chủ cửa hàng X** quản lý và phân tích dữ liệu khách hàng một cách hiệu quả, từ đó tối ưu hóa chiến lược kinh doanh. Dưới đây là những nôi dung của dự án:
+    st.subheader("Giới thiệu về dự án:")
+    st.markdown("""
+    Dự án này được thiết kế nhằm hỗ trợ **chủ cửa hàng X** quản lý và phân tích dữ liệu khách hàng một cách hiệu quả, từ đó tối ưu hóa chiến lược kinh doanh.
 
-    1. **Giới thiệu dự án**:  
-       Ứng dụng được xây dựng dành riêng cho **chủ cửa hàng X**, giúp phân tích hành vi khách hàng dựa trên dữ liệu giao dịch và tương tác. Mục tiêu là cung cấp một công cụ trực quan, dễ sử dụng để hỗ trợ việc ra quyết định kinh doanh.
+    ### 1. Giới thiệu dự án
+    - Ứng dụng dành riêng cho **chủ cửa hàng X**.  
+    - Phân tích hành vi khách hàng dựa trên dữ liệu giao dịch.  
+    - Cung cấp công cụ trực quan, dễ sử dụng.  
+    - Hỗ trợ ra quyết định kinh doanh hiệu quả.  
 
-    2. **Kết quả đạt được**:  
-       Dự án đã thành công trong việc **xác định các phân nhóm khách hàng** dựa trên các đặc điểm như thói quen mua sắm, sở thích, và mức độ chi tiêu. Các phân nhóm này giúp chủ cửa hàng hiểu rõ hơn về đối tượng khách hàng và xây dựng chiến lược tiếp cận phù hợp.
+    ### 2. Kết quả đạt được
+    - Xác định các phân nhóm khách hàng rõ ràng.  
+    - Dựa trên thói quen mua sắm và sở thích.  
+    - Phân tích mức độ chi tiêu của khách hàng.  
+    - Hỗ trợ xây dựng chiến lược tiếp cận phù hợp.  
 
-    3. **Lợi ích cho người dùng**:  
-       Với giao diện thân thiện và các công cụ phân tích tích hợp, người dùng có thể **dễ dàng xác định khách hàng tiềm năng**, từ đó cá nhân hóa các chiến dịch tiếp thị và nâng cao hiệu quả kinh doanh.
-    
-    """)  
+    ### 3. Lợi ích cho người dùng
+    - Giao diện thân thiện, dễ thao tác.  
+    - Xác định khách hàng tiềm năng nhanh chóng.  
+    - Cá nhân hóa chiến dịch tiếp thị hiệu quả.  
+    - Nâng cao hiệu suất kinh doanh đáng kể.  
+    """)
 
 elif choice == 'EDA':
     st.write("##### Show data:")
