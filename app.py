@@ -82,9 +82,9 @@ rfm_df['RFM_Level'] = rfm_df.apply(rfm_level, axis=1)
 output_file = 'rfm_df.csv'
 rfm_df.to_csv(output_file, index=True, encoding='utf-8')
 
-menu = ["Overview", "Build Project", "Manual RFM","Kmeans_RFM","Kmeans_RFM_bigdata","Hireachical_clustering","Tra cứu nhóm khách hàng"]
+menu = ["Giới thiệu tổng quan", "EDA","Tra cứu nhóm khách hàng"]
 choice = st.sidebar.selectbox('Menu', menu)
-if choice == 'Overview':    
+if choice == 'Giới thiệu tổng quan':    
     st.subheader("Giới thiệu project")
     st.write("""
     Dự án này được thiết kế nhằm hỗ trợ **chủ cửa hàng X** quản lý và phân tích dữ liệu khách hàng một cách hiệu quả, từ đó tối ưu hóa chiến lược kinh doanh. Dưới đây là những nôi dung của dự án:
@@ -100,9 +100,7 @@ if choice == 'Overview':
     
     """)  
 
-elif choice == 'Build Project':
-    st.subheader("Build Project")
-    st.write("#### Data Preprocessing")
+elif choice == 'EDA':
     st.write("##### Show data:")
     st.table(products_df.head(5)) 
 
@@ -220,11 +218,12 @@ elif choice == 'Build Project':
         ax.text(v + 0.5, i, f'{v:.2f}', va='center')
     # Hiển thị biểu đồ trong Streamlit
     st.pyplot(fig)
-
-elif choice == 'Manual RFM':
-    st.subheader("Manual RFM")
     
-    # Calculate average values for each RFM_Level, and return a size of each segment
+
+
+    
+    st.subheader("Manual RFM")
+        # Calculate average values for each RFM_Level, and return a size of each segment
     rfm_agg = rfm_df.groupby('RFM_Level').agg({
         'Recency': 'mean',
         'Frequency': 'mean',
@@ -256,9 +255,7 @@ elif choice == 'Manual RFM':
     plt.tight_layout()
     # Hiển thị biểu đồ trong Streamlit
     st.pyplot(fig)
-
     st.table(rfm_df['RFM_Level'].value_counts())
-
     st.table(rfm_agg)
 
     # Định nghĩa từ điển màu sắc
@@ -285,7 +282,7 @@ elif choice == 'Manual RFM':
         alpha=0.5  # Độ trong suốt
     )
     # Tùy chỉnh biểu đồ
-    plt.title("Customers Segments", fontsize=26, fontweight="bold")
+    plt.title("Customers Segments_Manual RFM", fontsize=26, fontweight="bold")
     plt.axis('off')  # Tắt trục
     # Hiển thị biểu đồ trong Streamlit
     st.pyplot(fig)
@@ -302,8 +299,13 @@ elif choice == 'Manual RFM':
     )
     # Hiển thị biểu đồ trong Streamlit
     st.plotly_chart(fig, use_container_width=True)
+  
 
-elif choice == 'Kmeans_RFM':
+
+
+
+    st.subheader("Kmeans RFM")
+
     from sklearn.cluster import KMeans
     rfm_df= pd.read_csv('rfm_df.csv')
     df_now = rfm_df[['Recency','Frequency','Monetary']]
@@ -424,12 +426,12 @@ elif choice == 'Kmeans_RFM':
                 label=['{} \n{:.0f} days \n{:.0f} orders \n{:.0f} $ \n{:.0f} customers ({}%)'.format(*rfm_agg2.iloc[i])
                         for i in range(0, len(rfm_agg2))], alpha=0.5 )
     # Tùy chỉnh biểu đồ
-    plt.title("Customers Segments", fontsize=26, fontweight="bold")
+    plt.title("Customers Segments_Kmeans RFM", fontsize=26, fontweight="bold")
     plt.axis('off')  # Tắt trục
     # Hiển thị biểu đồ trong Streamlit
     st.pyplot(fig)
 
-elif choice == "Kmeans_RFM_bigdata":
+
     from pyspark.ml.feature import VectorAssembler, StandardScaler
     from pyspark.ml.clustering import KMeans
     rfm_df= pd.read_csv('rfm_df.csv')
@@ -495,52 +497,6 @@ elif choice == "Kmeans_RFM_bigdata":
     # Tùy chỉnh biểu đồ
     plt.title("Customer Segments", fontsize=26, fontweight="bold")
     plt.axis("off")  # Tắt trục
-    # Hiển thị biểu đồ trong Streamlit
-    st.pyplot(fig)
-
-elif choice == "Hireachical_clustering":
-    from sklearn.preprocessing import StandardScaler
-    rfm_df= pd.read_csv('rfm_df.csv')
-    rfm_data = rfm_df[['Recency', 'Frequency', 'Monetary']]
-    scaler = StandardScaler()
-    rfm_scaled = scaler.fit_transform(rfm_data)
-
-    # Tạo biểu đồ
-    fig, ax = plt.subplots(figsize=(12, 6))  # Tạo figure và axes với kích thước 12x6
-    dendrogram = sch.dendrogram(sch.linkage(rfm_scaled, method='ward'), ax=ax)  # Vẽ dendrogram
-    # Tùy chỉnh biểu đồ
-    ax.set_title('Dendrogram for Hierarchical Clustering')
-    ax.set_xlabel('Customers')
-    ax.set_ylabel('Euclidean Distance')
-    # Hiển thị biểu đồ trong Streamlit
-    st.pyplot(fig)
-
-    # Chọn số cụm hợp lý dựa trên dendrogram (thường là 4-6 cụm)
-    num_clusters = 4  
-    # Phân cụm sử dụng Hierarchical Clustering
-    clusters = fcluster(sch.linkage(rfm_scaled, method='ward'), num_clusters, criterion='maxclust')
-    # Gán nhãn cụm vào DataFrame
-    rfm_df['Cluster'] = clusters
-    # Hiển thị số lượng khách hàng trong mỗi cụm
-    st.table(rfm_df['Cluster'].value_counts())  
-    # Tính giá trị trung bình của mỗi cụm
-    rfm_cluster_analysis = rfm_df.groupby('Cluster')[['Recency', 'Frequency', 'Monetary']].mean()
-    st.table(rfm_cluster_analysis)
-
-    # Tính tổng số khách hàng trong mỗi cụm
-    cluster_sizes = rfm_df['Cluster'].value_counts().sort_index()
-    # Tạo figure
-    fig, ax = plt.subplots(figsize=(10, 6))  # Tạo figure và axes với kích thước 10x6
-    # Vẽ Treemap
-    squarify.plot(
-        sizes=cluster_sizes,  # Kích thước ô dựa trên số lượng khách hàng trong mỗi cụm
-        label=[f'Cluster {i}' for i in cluster_sizes.index],  # Nhãn cho từng cụm
-        alpha=0.7,  # Độ trong suốt
-        color=['red', 'blue', 'green', 'orange']  # Danh sách màu cố định
-    )
-    # Tùy chỉnh biểu đồ
-    plt.title("Phân bố khách hàng theo cụm")
-    plt.axis("off")  # Ẩn trục
     # Hiển thị biểu đồ trong Streamlit
     st.pyplot(fig)
 
