@@ -422,25 +422,49 @@ elif choice == 'EDA':
         'Cluster1': 'royalblue',
         'Cluster2': 'cyan',
         'Cluster3': 'red',
-        'Cluster4': 'purple',
-        'Cluster5': 'green',
-        'Cluster6': 'gold'
     }
+
+        # Định nghĩa từ điển ánh xạ
+    cluster_to_group = {
+        0: 'Loyal Customers',
+        1: 'At-Risk Customers',
+        2: 'VIP',
+        3: 'Lost Customers'
+    }
+
+    # Thêm cột 'Cluster_Name' vào rfm_agg2
+    rfm_agg2['Cluster_Name'] = rfm_agg2['Cluster'].apply(lambda x: cluster_to_group[int(x.split()[-1])])
+
     # Tạo figure và axes
-    fig = plt.figure()  # Tạo figure
-    ax = fig.add_subplot()  # Thêm subplot
-    fig.set_size_inches(14, 10)  # Đặt kích thước 14x10
-    # Vẽ treemap
-    squarify.plot(sizes=rfm_agg2['Count'],
-                text_kwargs={'fontsize':12,'weight':'bold', 'fontname':"sans serif"},
-                color=colors_dict2.values(),
-                label=['{} \n{:.0f} days \n{:.0f} orders \n{:.0f} $ \n{:.0f} customers ({}%)'.format(*rfm_agg2.iloc[i])
-                        for i in range(0, len(rfm_agg2))], alpha=0.5 )
+    fig = plt.figure()
+    ax = fig.add_subplot()
+    fig.set_size_inches(14, 10)
+
+    # Vẽ Treemap
+    squarify.plot(
+        sizes=rfm_agg2['Count'],
+        text_kwargs={'fontsize': 12, 'weight': 'bold', 'fontname': "sans serif"},
+        color=colors_dict2.values(),
+        label=['{} \n{:.0f} days \n{:.0f} orders \n{:.0f} $ \n{:.0f} customers ({}%)'.format(
+            rfm_agg2['Cluster_Name'].iloc[i],  # Sử dụng Cluster_Name thay vì Cluster
+            rfm_agg2['RecencyMean'].iloc[i],
+            rfm_agg2['FrequencyMean'].iloc[i],
+            rfm_agg2['MonetaryMean'].iloc[i],
+            rfm_agg2['Count'].iloc[i],
+            rfm_agg2['Percent'].iloc[i]
+        ) for i in range(0, len(rfm_agg2))],
+        alpha=0.5
+    )
+
     # Tùy chỉnh biểu đồ
     plt.title("Customers Segments_Kmeans RFM", fontsize=26, fontweight="bold")
-    plt.axis('off')  # Tắt trục
+    plt.axis('off')
+
     # Hiển thị biểu đồ trong Streamlit
     st.pyplot(fig)
+
+
+
 
 elif choice=='Tra cứu nhóm khách hàng':
     pipeline = joblib.load('customer_segmentation_pipeline.pkl')
@@ -455,9 +479,8 @@ elif choice=='Tra cứu nhóm khách hàng':
     type = st.radio("Chọn cách nhập thông tin khách hàng", options=["Nhập mã khách hàng", "Nhập thông tin khách hàng vào dataframe","Tải file Excel/CSV"])
     if type == "Nhập mã khách hàng":
         # Nếu người dùng chọn nhập mã khách hàng
-        st.write ("Nhập mã khách hàng")
         # Tạo điều khiển để người dùng nhập mã khách hàng
-        customer_id = st.text_input("Nhập mã khách hàng")
+        customer_id = st.text_input("##### Nhập mã khách hàng")
         # Nếu người dùng nhập mã khách hàng, thực hiện các xử lý tiếp theo
         # Đề xuất khách hàng thuộc cụm nào
         # In kết quả ra màn hình
