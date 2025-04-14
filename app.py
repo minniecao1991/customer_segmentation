@@ -492,7 +492,7 @@ elif choice=='Tra cứu nhóm khách hàng':
                     st.write("Thông tin RFM:", customer_data)
                     cluster = pipeline.predict(customer_data[['Recency', 'Frequency', 'Monetary']])
                     group_name = cluster_to_group[cluster[0]]
-                    st.write(f"Khách hàng thuộc cụm: {group_name}")
+                    st.write(f"Khách hàng thuộc cụm theo Kmeans_RFM: {group_name}")
                     rfm_level = customer_data['RFM_Level'].iloc[0]
                     st.write(f"Khách hàng thuộc cụm theo tập luận RFM: {rfm_level}")
                 else:
