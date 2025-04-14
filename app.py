@@ -95,7 +95,9 @@ Cao Thị Ngọc Minh & Nguyễn Kế Nhựt
 """)
 
 if choice == 'Giới thiệu tổng quan':    
+        st.image('rfm-1.jpg', caption='Hình ảnh giới thiệu về dự án', use_container_width=True) 
         st.markdown("""
+                    
     Dự án này được thiết kế nhằm hỗ trợ **chủ cửa hàng X** quản lý và phân tích dữ liệu khách hàng một cách hiệu quả, từ đó tối ưu hóa chiến lược kinh doanh.
 
     ### 1. Giới thiệu dự án
@@ -117,7 +119,7 @@ if choice == 'Giới thiệu tổng quan':
    
     ### 4. Hướng dẫn sử dụng trang web:
     - Giới thiệu tổng quan: Mô tả dự án, kết quả, và lợi ích, bao gồm hướng dẫn sử dụng.
-    - EDA: Phân tích dữ liệu giao dịch qua bảng, biểu đồ, và phân cụm RFM/K-means.
+    - EDA: Phân tích dữ liệu giao dịch qua bảng, biểu đồ, và phân cụm RFM/K-means.              
     - Tra cứu nhóm khách hàng: Dự đoán nhóm khách hàng dựa trên RFM, hỗ trợ nhập tay hoặc file.
     """)
 
