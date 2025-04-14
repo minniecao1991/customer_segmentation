@@ -95,8 +95,7 @@ Cao Thị Ngọc Minh & Nguyễn Kế Nhựt
 """)
 
 if choice == 'Giới thiệu tổng quan':    
-    st.subheader("Giới thiệu về dự án:")
-    st.markdown("""
+        st.markdown("""
     Dự án này được thiết kế nhằm hỗ trợ **chủ cửa hàng X** quản lý và phân tích dữ liệu khách hàng một cách hiệu quả, từ đó tối ưu hóa chiến lược kinh doanh.
 
     ### 1. Giới thiệu dự án
@@ -115,12 +114,14 @@ if choice == 'Giới thiệu tổng quan':
     - Giao diện thân thiện, dễ thao tác.  
     - Xác định khách hàng tiềm năng nhanh chóng.  
     - Cá nhân hóa chiến dịch tiếp thị hiệu quả.  
-    - Nâng cao hiệu suất kinh doanh đáng kể.  
+   
+    ### 4. Hướng dẫn sử dụng trang web:
+    - Giới thiệu tổng quan: Mô tả dự án, kết quả, và lợi ích, bao gồm hướng dẫn sử dụng.
+    - EDA: Phân tích dữ liệu giao dịch qua bảng, biểu đồ, và phân cụm RFM/K-means.
+    - Tra cứu nhóm khách hàng: Dự đoán nhóm khách hàng dựa trên RFM, hỗ trợ nhập tay hoặc file.
     """)
 
 elif choice == 'EDA':
-    st.write("##### Show data:")
-    st.table(products_df.head(5)) 
 
     # Tạo biểu đồ
     fig, ax = plt.subplots(figsize=(10, 6))  # Tạo figure và axes với kích thước 10x6
@@ -147,8 +148,6 @@ elif choice == 'EDA':
     # Hiển thị biểu đồ trong Streamlit
     st.pyplot(fig1)
 
-    st.table(merged_df.head(5))
-
     # Tạo biểu đồ
     fig, ax = plt.subplots(figsize=(14, 8))  # Tạo figure và axes với kích thước 14x8
     sns.heatmap(pivot_table, annot=True, fmt='.0f', cmap='YlGnBu', cbar_kws={'label': 'Số lượng giao dịch'}, ax=ax)
@@ -160,8 +159,6 @@ elif choice == 'EDA':
     plt.tight_layout()  # Đảm bảo bố cục gọn gàng
     # Hiển thị biểu đồ trong Streamlit
     st.pyplot(fig)
-
-    st.table(merged_df.describe())
 
     # Tạo biểu đồ
     fig, ax = plt.subplots(figsize=(10, 6))  # Tạo figure và axes với kích thước 10x6
@@ -252,8 +249,6 @@ elif choice == 'EDA':
     rfm_agg['Percent'] = round((rfm_agg['Count']/rfm_agg.Count.sum())*100, 2)
     # Reset the index
     rfm_agg = rfm_agg.reset_index()
-    
-    st.table(rfm_df.head())
 
     # Tạo figure với kích thước tổng thể
     fig, axes = plt.subplots(3, 1, figsize=(12, 6))  # 3 hàng, 1 cột, kích thước 12x6
@@ -383,8 +378,6 @@ elif choice == 'EDA':
     # Đổi kiểu dữ liệu cột Cluster
     rfm_agg2['Cluster'] = 'Cluster ' + rfm_agg2['Cluster'].astype('str')
 
-    st.table(rfm_df.head())
-
     # Vẽ biểu đồ
     fig, axes = plt.subplots(1, 2, figsize=(14, 6))
 
@@ -449,75 +442,6 @@ elif choice == 'EDA':
     # Hiển thị biểu đồ trong Streamlit
     st.pyplot(fig)
 
-
-    from pyspark.ml.feature import VectorAssembler, StandardScaler
-    from pyspark.ml.clustering import KMeans
-    rfm_df= pd.read_csv('rfm_df.csv')
-    spark = SparkSession.builder.appName("RFM Analysis with K-Means").getOrCreate()
-    rfm_df = spark.read.csv("rfm_df.csv", header=True, inferSchema=True)
-    df_now = rfm_df.select("Recency", "Frequency", "Monetary")
-    # Chuyển đổi dữ liệu thành vector
-    assembler = VectorAssembler(inputCols=["Recency", "Frequency", "Monetary"], outputCol="features")
-    df_vector = assembler.transform(df_now)
-    # Chuẩn hóa dữ liệu
-    scaler = StandardScaler(inputCol="features", outputCol="scaled_features", withStd=True, withMean=True)
-    scaler_model = scaler.fit(df_vector)
-    df_scaled = scaler_model.transform(df_vector)
-    # Tính SSE cho Elbow Method
-    sse = {}
-    for k in range(2, 20):  # Bắt đầu từ 2 vì k=1 không hợp lệ trong PySpark
-        kmeans = KMeans(featuresCol="scaled_features", k=k, seed=42)
-        model = kmeans.fit(df_scaled)
-        sse[k] = model.summary.trainingCost
-    
-    # Chuẩn bị dữ liệu
-    k_values = list(sse.keys())
-    sse_values = list(sse.values())
-    # Tạo biểu đồ
-    fig, ax = plt.subplots(figsize=(14, 10))  # Tạo figure và axes với kích thước 14x10
-    ax.plot(k_values, sse_values, "bx-")  # Vẽ đường với định dạng "bx-" (blue, x markers)
-    # Tùy chỉnh biểu đồ
-    ax.set_xlabel("Number of Clusters (k)")
-    ax.set_ylabel("SSE")
-    ax.set_title("Elbow Method for Optimal k")
-    # Hiển thị biểu đồ trong Streamlit
-    st.pyplot(fig)
-
-    # Phân cụm với k=4 (giả sử từ Elbow)
-    kmeans = KMeans(featuresCol="scaled_features", k=4, seed=42)
-    model = kmeans.fit(df_scaled)
-    df_clustered = model.transform(df_scaled).select("Recency", "Frequency", "Monetary", col("prediction").alias("Cluster"))
-
-    # Tổng hợp dữ liệu theo cụm
-    rfm_agg = df_clustered.groupBy("Cluster").agg({
-        "Recency": "avg",
-        "Frequency": "avg",
-        "Monetary": "avg",
-        "Cluster": "count"
-    }).withColumnRenamed("count(Cluster)", "Count")
-
-    # Chuyển sang pandas DataFrame và vẽ treemap
-    rfm_agg_pd = rfm_agg.toPandas()
-    colors_dict = {0: "yellow", 1: "royalblue", 2: "cyan", 3: "red"}
-    # Tạo figure
-    fig, ax = plt.subplots(figsize=(14, 10))  # Tạo figure và axes với kích thước 14x10
-    # Vẽ treemap
-    squarify.plot(
-        sizes=rfm_agg_pd["Count"],  # Kích thước ô dựa trên số lượng khách hàng
-        color=[colors_dict[i] for i in rfm_agg_pd["Cluster"]],  # Gán màu từ từ điển dựa trên Cluster
-        label=[
-            f"Cluster {row['Cluster']}\n{row['avg(Recency)']:.0f} days\n{row['avg(Frequency)']:.0f} orders\n{row['avg(Monetary)']:.0f} $\n{row['Count']:.0f} customers ({row['Count']/rfm_agg_pd['Count'].sum()*100:.0f}%)"
-            for _, row in rfm_agg_pd.iterrows()
-        ],  # Nhãn với thông tin chi tiết
-        alpha=0.5,  # Độ trong suốt
-        text_kwargs={'fontsize': 12, 'weight': 'bold', 'fontname': "sans serif"}  # Tùy chỉnh văn bản
-    )
-    # Tùy chỉnh biểu đồ
-    plt.title("Customer Segments", fontsize=26, fontweight="bold")
-    plt.axis("off")  # Tắt trục
-    # Hiển thị biểu đồ trong Streamlit
-    st.pyplot(fig)
-
 elif choice=='Tra cứu nhóm khách hàng':
     pipeline = joblib.load('customer_segmentation_pipeline.pkl')
     cluster_to_group = {
@@ -527,11 +451,11 @@ elif choice=='Tra cứu nhóm khách hàng':
         3: 'Lost Customers' #Lâu không mua, hiếm khi mua, chi tiêu rất thấp.
     }
     # Chọn nhập mã khách hàng hoặc nhập thông tin khách hàng vào dataframe
-    st.write("##### 1. Chọn cách nhập thông tin khách hàng")
+    st.write("#### Chọn cách nhập thông tin khách hàng")
     type = st.radio("Chọn cách nhập thông tin khách hàng", options=["Nhập mã khách hàng", "Nhập thông tin khách hàng vào dataframe","Tải file Excel/CSV"])
     if type == "Nhập mã khách hàng":
         # Nếu người dùng chọn nhập mã khách hàng
-        st.subheader("Nhập mã khách hàng")
+        st.write ("Nhập mã khách hàng")
         # Tạo điều khiển để người dùng nhập mã khách hàng
         customer_id = st.text_input("Nhập mã khách hàng")
         # Nếu người dùng nhập mã khách hàng, thực hiện các xử lý tiếp theo
@@ -554,7 +478,7 @@ elif choice=='Tra cứu nhóm khách hàng':
                 st.write("Vui lòng nhập mã khách hàng hợp lệ (số nguyên).")
     elif type == "Nhập thông tin khách hàng vào dataframe":
         # Nếu người dùng chọn nhập thông tin khách hàng vào dataframe có 3 cột là Recency, Frequency, Monetary
-        st.write("##### 2. Thông tin khách hàng")
+        st.write("##### Thông tin khách hàng")
         # Tạo điều khiển table để người dùng nhập thông tin khách hàng trực tiếp trên table
         st.write("Nhập thông tin khách hàng")
         # Tạo dataframe để người dùng nhập thông tin khách hàng
@@ -583,7 +507,7 @@ elif choice=='Tra cứu nhóm khách hàng':
         # hoặc thực hiện các xử lý khác
     elif type == "Tải file Excel/CSV":
         # Nếu người dùng chọn tải file Excel/CSV
-        st.subheader("Tải file Excel hoặc CSV")
+        st.write("##### Tải file Excel hoặc CSV")
         # Tạo file mẫu để tải về
         sample_df = pd.DataFrame(columns=['Member_number', 'Recency', 'Frequency', 'Monetary'])
         # Chuyển DataFrame thành CSV buffer
